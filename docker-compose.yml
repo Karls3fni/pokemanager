@@ -2,6 +2,8 @@ services:
   api:
     build: .   # usa tu Dockerfile que instala uv y dependencias
     working_dir: /app
+    volumes:
+      - .:/app
     ports:
       - "8000:8000"
     command: ["uv", "run", "uvicorn", "app.asgi:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

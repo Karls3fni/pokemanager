@@ -11,6 +11,8 @@ COPY pyproject.toml uv.lock* ./
 # instalar dependencias declaradas en uv.lock
 RUN uv sync --frozen
 
+RUN uv pip install ipython
+
 # copiar código de la app
 COPY app ./app
 
