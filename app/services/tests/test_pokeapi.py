@@ -1,143 +1,176 @@
-from app.services.pokeapi import PokeService
-from unittest import mock
+from unittest import mock, TestCase
+import httpx
 
-class TestPokeapi:
+from app.services.pokeapi import PokeService, PokeServiceError, Movement, Pokemon
+
+
+class TestPokeService(TestCase):
+
+    # ─────────────────────────────────────────────
+    # HELPERS (DATOS MOCK REALISTAS)
+    # ─────────────────────────────────────────────
+
+    def _get_pokeservice(self):
+        return PokeService()
+
     def _get_movement_data(self):
         return {
             "id": 1,
             "name": "pound",
             "accuracy": 100,
-            "effect_chance": None,
+            "power": 40,
+            "damage_class": {"name": "physical"},
+            "type": {"name": "normal"},
             "pp": 35,
             "priority": 0,
-            "power": 40,
-            "contest_combos": {
-                "normal": {
-                    "use_before": [
-                        {
-                            "name": "double-slap",
-                            "url": "https://pokeapi.co/api/v2/move/3/",
-                        },
-                        {
-                            "name": "headbutt",
-                            "url": "https://pokeapi.co/api/v2/move/29/",
-                        },
-                        {
-                            "name": "feint-attack",
-                            "url": "https://pokeapi.co/api/v2/move/185/",
-                        },
-                    ],
-                    "use_after": None,
-                },
-                "super": {"use_before": None, "use_after": None},
-            },
-            "contest_type": {
-                "name": "tough",
-                "url": "https://pokeapi.co/api/v2/contest-type/5/",
-            },
-            "contest_effect": {"url": "https://pokeapi.co/api/v2/contest-effect/1/"},
-            "damage_class": {
-                "name": "physical",
-                "url": "https://pokeapi.co/api/v2/move-damage-class/2/",
-            },
-            "effect_entries": [
-                {
-                    "effect": "Inflicts [regular damage]{mechanic:regular-damage}.",
-                    "short_effect": "Inflicts regular damage with no additional effect.",
-                    "language": {
-                        "name": "en",
-                        "url": "https://pokeapi.co/api/v2/language/9/",
-                    },
-                }
-            ],
-            "effect_changes": [],
-            "generation": {
-                "name": "generation-i",
-                "url": "https://pokeapi.co/api/v2/generation/1/",
-            },
-            "meta": {
-                "ailment": {
-                    "name": "none",
-                    "url": "https://pokeapi.co/api/v2/move-ailment/0/",
-                },
-                "category": {
-                    "name": "damage",
-                    "url": "https://pokeapi.co/api/v2/move-category/0/",
-                },
-                "min_hits": None,
-                "max_hits": None,
-                "min_turns": None,
-                "max_turns": None,
-                "drain": 0,
-                "healing": 0,
-                "crit_rate": 0,
-                "ailment_chance": 0,
-                "flinch_chance": 0,
-                "stat_chance": 0,
-            },
-            "names": [
-                {
-                    "name": "Pound",
-                    "language": {
-                        "name": "en",
-                        "url": "https://pokeapi.co/api/v2/language/9/",
-                    },
-                }
-            ],
-            "past_values": [],
-            "stat_changes": [],
-            "super_contest_effect": {
-                "url": "https://pokeapi.co/api/v2/super-contest-effect/5/"
-            },
-            "target": {
-                "name": "selected-pokemon",
-                "url": "https://pokeapi.co/api/v2/move-target/10/",
-            },
-            "type": {"name": "normal", "url": "https://pokeapi.co/api/v2/type/1/"},
-            "learned_by_pokemon": [
-                {"name": "clefairy", "url": "https://pokeapi.co/api/v2/pokemon/35/"}
-            ],
-            "flavor_text_entries": [
-                {
-                    "flavor_text": "Pounds with fore­\nlegs or tail.",
-                    "language": {
-                        "url": "https://pokeapi.co/api/v2/language/9/",
-                        "name": "en",
-                    },
-                    "version_group": {
-                        "url": "https://pokeapi.co/api/v2/version-group/3/",
-                        "name": "gold-silver",
-                    },
-                }
-            ],
+            "effect_chance": None
         }
 
-    def _get_pokeservice(self) -> PokeService:
-        return PokeService()
+    def _get_pokemon_data(self):
+        return {
+            "name": "pikachu",
+            "types": [{"type": {"name": "electric"}}],
+            "abilities": [{"ability": {"name": "static"}}],
+            "moves": [
+                {"move": {"name": "pound"}},
+                {"move": {"name": "pound"}},
+                {"move": {"name": "pound"}},
+                {"move": {"name": "pound"}}
+            ]
+        }
+
+    # ─────────────────────────────────────────────
+    # TEST get_movement_by_name
+    # ─────────────────────────────────────────────
 
     def test_get_movement_by_name(self):
         with mock.patch("app.services.pokeapi.httpx.Client.get") as mock_get:
             mock_get.return_value.status_code = 200
             mock_get.return_value.json.return_value = self._get_movement_data()
+            mock_get.return_value.raise_for_status.return_value = None
+
             poke_service = self._get_pokeservice()
             movement = poke_service.get_movement_by_name("pound")
+
             assert movement.name == "pound"
             assert movement.type == "normal"
             assert movement.category == "physical"
             assert movement.power == 40
             assert movement.success_rate == 100
 
-    def test_get_movement_by_name_pokeservice_error(self):
+    def test_get_movement_by_name_request_error(self):
         with mock.patch("app.services.pokeapi.httpx.Client.get") as mock_get:
-            mock_get.return_value.status_code = 404
-            poke_service = self._get_pokeservice()
-            movement = poke_service.get_movement_by_name("pound")
-            assert movement is None
+            mock_get.side_effect = httpx.RequestError("error")
+
+            with self.assertRaises(PokeServiceError):
+                self._get_pokeservice().get_movement_by_name("pound")
 
     def test_get_movement_by_name_key_error(self):
         with mock.patch("app.services.pokeapi.httpx.Client.get") as mock_get:
             mock_get.return_value.status_code = 200
             mock_get.return_value.json.return_value = {}
-            poke_service = self._get_pokeservice()
-            movement = poke_service.get_movement_by_name("pound")
-            assert movement is None
+            mock_get.return_value.raise_for_status.return_value = None
+
+            with self.assertRaises(PokeServiceError):
+                self._get_pokeservice().get_movement_by_name("pound")
+
+    # ─────────────────────────────────────────────
+    # TEST get_pokemon_by_name
+    # ─────────────────────────────────────────────
+
+    def test_get_pokemon_by_name(self):
+        with mock.patch("app.services.pokeapi.httpx.Client.get") as mock_get, \
+             mock.patch("app.services.pokeapi.random.sample", return_value=["pound","pound","pound","pound"]), \
+             mock.patch("app.services.pokeapi.random.randint", return_value=0), \
+             mock.patch("app.services.pokeapi.PokeService.get_natures_randomly", return_value="jolly"), \
+             mock.patch("app.services.pokeapi.PokeService.get_movement_by_name") as mock_move:
+
+            mock_get.return_value.status_code = 200
+            mock_get.return_value.json.return_value = self._get_pokemon_data()
+            mock_get.return_value.raise_for_status.return_value = None
+
+            mock_move.return_value = Movement(
+                name="pound",
+                type="normal",
+                category="physical",
+                power=40,
+                success_rate=100
+            )
+
+            pokemon = self._get_pokeservice().get_pokemon_by_name("pikachu")
+
+            assert pokemon.name == "pikachu"
+            assert pokemon.types == ["electric"]
+            assert pokemon.ability == "static"
+            assert pokemon.nature == "jolly"
+            assert len(pokemon.movements) == 4
+
+    def test_get_pokemon_by_name_http_error(self):
+        with mock.patch("app.services.pokeapi.httpx.Client.get") as mock_get:
+            mock_get.return_value.raise_for_status.side_effect = httpx.HTTPStatusError(
+                "error", request=mock.Mock(), response=mock.Mock()
+            )
+
+            with self.assertRaises(PokeServiceError):
+                self._get_pokeservice().get_pokemon_by_name("pikachu")
+
+    def test_get_pokemon_by_name_key_error(self):
+        with mock.patch("app.services.pokeapi.httpx.Client.get") as mock_get:
+            mock_get.return_value.status_code = 200
+            mock_get.return_value.json.return_value = {}
+            mock_get.return_value.raise_for_status.return_value = None
+
+            with self.assertRaises(PokeServiceError):
+                self._get_pokeservice().get_pokemon_by_name("pikachu")
+
+    # ─────────────────────────────────────────────
+    # TEST get_pokemon_randomly
+    # ─────────────────────────────────────────────
+
+    def test_get_pokemon_randomly(self):
+        with mock.patch("app.services.pokeapi.random.randint", return_value=25), \
+             mock.patch("app.services.pokeapi.PokeService.get_pokemon_by_name") as mock_get_pokemon:
+
+            mock_get_pokemon.return_value = Pokemon(
+                name="pikachu",
+                types=["electric"],
+                ability="static",
+                nature="jolly",
+                movements=[]
+            )
+
+            pokemon = self._get_pokeservice().get_pokemon_randomly()
+
+            assert pokemon.name == "pikachu"
+
+    def test_get_pokemon_randomly_error(self):
+        with mock.patch("app.services.pokeapi.PokeService.get_pokemon_by_name") as mock_get_pokemon:
+            mock_get_pokemon.side_effect = httpx.RequestError("error")
+
+            with self.assertRaises(PokeServiceError):
+                self._get_pokeservice().get_pokemon_randomly()
+
+    # ─────────────────────────────────────────────
+    # TEST get_natures_randomly
+    # ─────────────────────────────────────────────
+
+    def test_get_natures_randomly(self):
+        with mock.patch("app.services.pokeapi.random.randint", return_value=1), \
+             mock.patch("app.services.pokeapi.httpx.Client.get") as mock_get:
+
+            mock_get.return_value.status_code = 200
+            mock_get.return_value.json.return_value = {"name": "bold"}
+
+            nature = self._get_pokeservice().get_natures_randomly()
+
+            assert nature == "bold"
+
+    def test_get_natures_randomly_fallback(self):
+        with mock.patch("app.services.pokeapi.random.randint", return_value=1), \
+             mock.patch("app.services.pokeapi.httpx.Client.get") as mock_get:
+
+            mock_get.return_value.status_code = 500
+
+            nature = self._get_pokeservice().get_natures_randomly()
+
+            assert nature == "jolly"

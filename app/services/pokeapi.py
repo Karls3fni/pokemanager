@@ -1,5 +1,3 @@
-from urllib import response
-
 import httpx
 import random
 import typing
@@ -108,7 +106,6 @@ class PokeService:
             Returns None if there is an error during retrieval or parsing.
         """
         try:
-            response.raise_for_status()
             pokemon_id = random.randint(1, 898)  # Hay 898 Pokémon en la PokéAPI
             return self.get_pokemon_by_name(str(pokemon_id))
         except httpx.RequestError:
