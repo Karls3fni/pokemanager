@@ -1,9 +1,43 @@
 services:
   api:
-    build: .   # usa tu Dockerfile que instala uv y dependencias
+    build: .
     working_dir: /app
     volumes:
       - .:/app
     ports:
       - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      POSTGRES_USER: manu
+      POSTGRES_PASSWORD: hola123
+      POSTGRES_DB: pokemanager
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      DATABASE_URL: postgresql+psycopg2://manu:hola123@db:5432/pokemanager
     command: ["uv", "run", "uvicorn", "app.asgi:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  db:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER: manu
+      POSTGRES_PASSWORD: hola123
+      POSTGRES_DB: pokemanager
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  adminer: 
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+
+  
