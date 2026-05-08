@@ -1,10 +1,10 @@
-name: Pokemanager Tests
+name: Ruff Lint
 
 on:
   pull_request:
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,8 +22,5 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
-      - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=." >> $GITHUB_ENV
-
-      - name: Run tests
-        run: uv run pytest
+      - name: Run Ruff
+        run: uv run ruff check
