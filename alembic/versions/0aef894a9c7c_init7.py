@@ -1,8 +1,8 @@
-"""init6
+"""init7
 
-Revision ID: 98a71481b308
+Revision ID: 0aef894a9c7c
 Revises: 
-Create Date: 2026-04-23 07:57:56.465483
+Create Date: 2026-05-04 12:11:28.964585
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '98a71481b308'
+revision: str = '0aef894a9c7c'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -34,17 +34,17 @@ def upgrade() -> None:
     sa.UniqueConstraint('uuid')
     )
     op.create_table('trainer',
-    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('region', sa.String(), nullable=False),
     sa.Column('genre', sa.String(), nullable=False),
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('uuid', sa.Uuid(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('uuid')
     )
     op.create_table('pokemon',
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('type', sa.String(), nullable=False),
+    sa.Column('types', sa.JSON(), nullable=False),
     sa.Column('ability', sa.String(), nullable=False),
     sa.Column('nature', sa.String(), nullable=False),
     sa.Column('trainer_id', sa.Integer(), nullable=False),
