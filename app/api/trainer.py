@@ -13,8 +13,6 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 router = APIRouter(prefix="/trainer", tags=["trainer"])
 
 
-# Este endpoint es para crear un nuevo entrenador. 
-# Recibe un objeto TrainerCreate y devuelve el entrenador creado.
 @router.post("/")
 def create_trainer_endpoint(
     trainer: TrainerCreate,
@@ -22,19 +20,13 @@ def create_trainer_endpoint(
 ) -> TrainerOutput:
     """Create a new trainer.
 
-    Args:
-        trainer (TrainerCreate): The data for the trainer to be created.
-        db (Session, optional): The database session. Defaults to Depends(get_db).
-
-    Returns:
-        TrainerOutput: The newly created trainer.
+    Responses:
+        200: Trainer created successfully and returned in the response.
     """
     trainer_db = trainer_service.create_trainer(db, trainer)
     return TrainerOutput.model_validate(trainer_db)
 
 
-# Este endpoint es para que un entrenador atrape un Pokémon. 
-# Recibe el UUID del entrenador.
 @router.post("/{trainer_uuid}/pokemons/catch")
 def catch_pokemon(
     trainer_uuid: uuid.UUID,
@@ -42,16 +34,10 @@ def catch_pokemon(
 ):
     """Allow a trainer to catch a random Pokémon from the PokeAPI.
 
-    Args:
-        trainer_uuid (uuid.UUID): UUID of the trainer who wants to catch a Pokémon.
-        db (Session, optional): Database session. Defaults to Depends(get_db).
-
-    Raises:
-        HTTPException: If the trainer with the specified UUID is not found in the database, a 404 error is raised.
-        HTTPException: If there is an error fetching a random Pokémon from the PokeAPI, a 503 error is raised.
-
-    Returns:
-        PokemonOutput: The Pokémon caught by the trainer.
+    Responses:
+        200: Pokémon caught successfully and returned in the response.
+        404: Trainer with the specified UUID not found in the database.
+        503: Error fetching a random Pokémon from the PokeAPI.
     """
     try:
         pokemon = trainer_service.catch_pokemon(db, trainer_uuid)
@@ -69,15 +55,10 @@ def get_trainer_pokemons(
     db: Session = Depends(get_db)
 ):
     """Retrieve the list of pokemons caught by a trainer given their uuid
-    Args:
-        trainer_uuid (uuid.UUID): UUID of the trainer whose pokemons we want to retrieve
-        db (Session, optional): Database session. Defaults to Depends(get_db).
-
-    Raises:
-        HTTPException: If the trainer with the specified UUID is not found in the database, a 404 error is raised.
-
-    Returns:
-        _type_: Paginated list of pokemons caught by the trainer
+    
+    Responses:
+        200: List of pokemons caught by the trainer returned successfully.
+        404: Trainer with the specified UUID not found in the database.
     """
 
     try:

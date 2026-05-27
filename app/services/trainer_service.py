@@ -1,9 +1,9 @@
 from app.models.trainer import Trainer
 from app.models.pokemon import Pokemon
+from app.schemas.trainer import TrainerCreate
 from app.services import pokeapi
 import uuid
 
-from typing import Any
 from sqlalchemy.orm import Session, Query
 
 
@@ -15,15 +15,12 @@ class TrainerNotFoundError(TrainerServiceError):
     pass
 
 
-# Este método crea un nuevo entrenador en la base de datos. 
-# Recibe un objeto TrainerCreate con los datos del entrenador a crear, y luego guarda el nuevo entrenador en la base de datos.
-
-def create_trainer(db: Session, trainer_data: Any) -> Trainer:
+def create_trainer(db: Session, trainer_data: TrainerCreate) -> Trainer:
     """ Create a new trainer in the database.
 
     Args:
         db (Session): Instance of the database session.
-        trainer_data (Any): An instance of TrainerCreate containing the data for the trainer to be created.
+        trainer_data (TrainerCreate): An instance of TrainerCreate containing the data for the trainer to be created.
 
     Returns:
         Trainer: An instance of the Trainer class representing the newly created trainer, including its details such as name, region, genre, and a unique UUID.
@@ -42,10 +39,6 @@ def create_trainer(db: Session, trainer_data: Any) -> Trainer:
 
     return trainer
 
-
-# Este método permite a un entrenador atrapar un Pokémon aleatorio de la PokeAPI.
-# Recibe el UUID del entrenador, consulta la PokeAPI para obtener un Pokémon al azar,
-# lo crea en la base de datos si no existe, y lo asocia al entrenador.
 
 def catch_pokemon(db: Session, trainer_uuid: uuid.UUID) -> Pokemon:
     """ Allow a trainer to catch a random Pokémon from the PokeAPI.
@@ -67,10 +60,10 @@ def catch_pokemon(db: Session, trainer_uuid: uuid.UUID) -> Pokemon:
     if not trainer:
         raise TrainerNotFoundError("Trainer not found")
     
-    pokeapi_service: Any = pokeapi.get_poke_service()
+    pokeapi_service = pokeapi.get_poke_service()
 
     try:
-        random_pokemon: Any = pokeapi_service.get_pokemon_randomly()
+        random_pokemon = pokeapi_service.get_pokemon_randomly()
     except pokeapi.PokeServiceError:
         raise TrainerServiceError("Error fetching random Pokémon")
 
@@ -89,9 +82,6 @@ def catch_pokemon(db: Session, trainer_uuid: uuid.UUID) -> Pokemon:
 
     return pokemon
 
-
-# Este método obtiene los Pokémon de un entrenador dado su UUID. 
-# Busca el entrenador en la base de datos y devuelve la lista de Pokémon asociados a ese entrenador.
 
 def get_trainer_pokemons_query(db: Session, trainer_uuid: uuid.UUID) -> Query[Pokemon]:
     """ Retrieve the list of pokemons caught by a trainer given their uuid

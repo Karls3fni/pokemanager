@@ -1,5 +1,6 @@
 from unittest import TestCase, mock
 import uuid
+from app.schemas.pokemon_schema import PokemonOutput
 
 from app.services.trainer_service import (
     create_trainer,
@@ -11,33 +12,27 @@ from app.services.trainer_service import (
 
 from app.services import pokeapi
 from app.models.trainer import Trainer
-
+from app.schemas.trainer import TrainerCreate
 
 class TestTrainerService(TestCase):
 
     def _get_trainer_data(self):
-        return type(
-            "TrainerCreate",
-            (),
-            {
-                "name": "Ash",
-                "region": "Kanto",
-                "genre": "male"
-            }
-        )()
+        return TrainerCreate(
+            name="Ash",
+            region="Kanto",
+            genre="male"
+        )
 
-    def _get_random_pokemon(self):
-        return type(
-            "RandomPokemon",
-            (),
-            {
-                "name": "pikachu",
-                "types": ["electric"],
-                "ability": "static",
-                "nature": "jolly"
-            }
-        )()
+    def _get_pokemon_data(self):
 
+        return PokemonOutput(
+            uuid=uuid.uuid4(),
+            name="Pikachu",
+            types=["electric"],
+            ability="static",
+            nature="jolly"
+        )
+    
     def _get_trainer(self):
         return Trainer(
             id=1,
@@ -77,7 +72,7 @@ class TestTrainerService(TestCase):
         db.query.return_value.filter.return_value.first.return_value = trainer
 
         fake_service = mock.Mock()
-        fake_service.get_pokemon_randomly.return_value = self._get_random_pokemon()
+        fake_service.get_pokemon_randomly.return_value = self._get_pokemon_data()
 
         with mock.patch(
             "app.services.pokeapi.get_poke_service",
