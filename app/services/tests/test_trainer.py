@@ -27,7 +27,7 @@ class TestTrainerService(TestCase):
 
         return PokemonOutput(
             uuid=uuid.uuid4(),
-            name="Pikachu",
+            name="pikachu",
             types=["electric"],
             ability="static",
             nature="jolly"
