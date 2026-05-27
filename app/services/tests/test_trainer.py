@@ -1,6 +1,6 @@
 from unittest import TestCase, mock
 import uuid
-from app.schemas.pokemon_schema import PokemonOutput
+from app.schemas.pokemon import PokemonOutput
 
 from app.services.trainer_service import (
     create_trainer,
